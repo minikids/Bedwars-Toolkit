@@ -1,25 +1,22 @@
-import mouse
 from pynput import keyboard
+import pyautogui
 import time
 import threading
 from ctypes import *
+import dylib
 
-cdll.LoadLibrary("main.dylib")
-
-dylib = CDLL("main.dylib")
-
-delay : int = int()
+cps = int()
 
 readFile = dylib.readFile
 
 readFile.restype = c_char_p
 
-if (dylib.isFile(b"delay.settings") == 1):
-    delay = float(readFile(b"delay.settings"))
+if (dylib.isFile(b"cps.settings") == 1):
+    cps = float(readFile(b"cps.settings"))
 else:
-    inputcontent = input("Enter delay between clicks (in seconds): ").encode()
-    delay = float(inputcontent)
-    dylib.writeFile(b"delay.settings", inputcontent)
+    inputcontent = input("Enter CPS: ").encode()
+    cps = float(inputcontent)
+    dylib.writeFile(b"cps.settings", inputcontent)
 
 start_click = dylib.start_click
 
@@ -43,11 +40,11 @@ quit_main = False
 
 def main():
     global start_click
-    global delay
+    global cps
     while quit_main == False:
         if start_click == 1:
-            mouse.click()
-            time.sleep(delay)
+            pyautogui.click(_pause = False, clicks=round(cps / 33), interval=1/(cps))
+        time.sleep(0.05)
 
 mainthread = threading.Thread(target=main)
 
@@ -57,3 +54,4 @@ try:
         l.join()
 except KeyboardInterrupt:
     quit_main = True
+    mainthread.join()
